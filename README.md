@@ -2,24 +2,24 @@
 
 A reinforcement-learning project where an agent learns to navigate grid environments while avoiding obstacles.
 
-## Stage 2: Dynamic Grid Training
+## Stage 1: Basic Q-Learning
 
-The agent now receives:
+The first version trained a tabular Q-learning agent on one fixed grid and demonstrated reliable learning in a fixed environment.
 
-- Current position
-- Goal position
-- Complete obstacle layout
+## Stage 2: Full-Grid State
 
-as its state.
+The second version trained on many random grids. The state contained the current position, goal position, and complete obstacle layout. This showed the scalability problem of tabular Q-learning: different layouts create huge numbers of distinct states.
 
-Training uses many randomly generated, solvable grids. The final evaluation uses a separate unseen grid.
+## Stage 3: Local-State Q-Learning
 
-## Run
+Stage 3 stays fully tabular and uses no neural network. The agent observes a 3x3 neighborhood around itself and the relative direction of the goal.
 
-```bash
-python main.py
-```
+Local cell encoding: 0 = free, 1 = obstacle, 2 = outside the grid. The final two state values encode goal row and column direction as -1, 0, or 1.
 
-## Important
+Training uses many randomly generated solvable grids, then evaluation uses separate unseen grids.
 
-Stage 2 uses a tabular Q-learning approach. Because the full grid is part of the state, the number of possible states grows rapidly with grid size and obstacle combinations. This is useful for demonstrating the concept, but Stage 3 will investigate a more scalable representation for generalization.
+Run: python main.py
+
+## Limitation
+
+A 3x3 local view cannot see the whole map. Complex layouts may therefore still require memory or a larger state representation. This stage is an experiment in generalization with a compact tabular state.
