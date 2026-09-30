@@ -1,16 +1,9 @@
-from environment.grid_env import GridEnvironment
 from training.train import train
-from utils.grid_generator import generate_obstacles
 
 
 def run_demo():
     print("Training Q-learning agent...")
-    agent = train(episodes=5000)
-
-    size = 10
-    goal = (size - 1, size - 1)
-    obstacles = generate_obstacles(size, 0.20, goal=goal)
-    env = GridEnvironment(size, obstacles, goal=goal)
+    agent, env = train(episodes=5000)
 
     state = env.reset()
     path = [state]
@@ -24,11 +17,13 @@ def run_demo():
         if result.done:
             break
 
-    print("\nNew grid:")
-    print(env.render())
-    print("\nAgent path:")
+    print("\nLearned path:")
     print(env.render(path))
-    print("\nGoal reached!" if state == goal else "\nGoal not reached within step limit.")
+
+    if state == env.goal:
+        print(f"\nGoal reached in {len(path) - 1} moves!")
+    else:
+        print("\nGoal not reached within the step limit.")
 
 
 if __name__ == "__main__":
