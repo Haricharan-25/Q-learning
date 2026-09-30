@@ -1,37 +1,60 @@
 from pathlib import Path
 import pickle
+import random
 
 from agent.q_learning import QLearningAgent
 from environment.grid_env import GridEnvironment
 from utils.grid_generator import generate_obstacles
 
 
-def train(episodes=5000, grid_size=10, obstacle_probability=0.20,
-          max_steps=300, model_path="models/q_table.pkl"):
-    """Train on one fixed grid.
-
-    A basic Q-table maps only (row, column) to action values. If obstacles
-    change while the state stays the same, experiences become inconsistent.
-    Stage 1 therefore uses one fixed environment to validate Q-learning.
-    """
-    agent = QLearningAgent()
-
-    goal = (grid_size - 1, grid_size - 1)
-    obstacles = generate_obstacles(grid_size, obstacle_probability, goal=goal)
-    env = GridEnvironment(grid_size, obstacles, goal=goal)
-
-    print("\nTraining grid:")
-    print(env.render())
+def train(
+    episodes=10000,
+    grid_size=10,
+    obstacle_probability=0.15,
+    max_steps=300,
+    model_path="models/q_table.pkl",
+):
+    """Train on many randomly generated grid layouts."""
+    agent = QLearningAgent(
+        learning_rate=0.1,
+        discount_factor=0.95,
+        epsilon=1.0,
+        epsilon_decay=0.9995,
+        epsilon_min=0.05,
+    )
 
     successes = 0
 
     for episode in range(1, episodes + 1):
+        goal = (grid_size - 1, grid_size - 1)
+
+        # Retry until this random grid has a path from start to goal.
+        for _ in range(100):
+            obstacles = generate_obstacles(
+                grid_size,
+                obstacle_probability,
+                goal=goal,
+            )
+            env = GridEnvironment(grid_size, obstacles, goal=goal)
+            if _has_possible_path(env):
+                break
+        else:
+            continue
+
         state = env.reset()
 
         for _ in range(max_steps):
             action = agent.choose_action(state)
             result = env.step(action)
-            agent.learn(state, action, result.reward, result.state, result.done)
+
+            agent.learn(
+                state,
+                action,
+                result.reward,
+                result.state,
+                result.done,
+            )
+
             state = result.state
 
             if result.done:
@@ -40,7 +63,7 @@ def train(episodes=5000, grid_size=10, obstacle_probability=0.20,
 
         agent.end_episode()
 
-        if episode % 500 == 0:
+        if episode % 1000 == 0:
             rate = successes / episode * 100
             print(
                 f"Episode {episode}/{episodes} | "
@@ -55,7 +78,33 @@ def train(episodes=5000, grid_size=10, obstacle_probability=0.20,
         pickle.dump(dict(agent.q_table), file)
 
     print(f"Model saved to {path}")
-    return agent, env
+    return agent
+
+
+def _has_possible_path(env):
+    """Simple BFS used only to reject impossible training layouts."""
+    queue = [env.start]
+    visited = {env.start}
+
+    while queue:
+        row, col = queue.pop(0)
+
+        if (row, col) == env.goal:
+            return True
+
+        for dr, dc in GridEnvironment.ACTIONS.values():
+            nxt = (row + dr, col + dc)
+
+            if (
+                0 <= nxt[0] < env.size
+                and 0 <= nxt[1] < env.size
+                and nxt not in env.obstacles
+                and nxt not in visited
+            ):
+                visited.add(nxt)
+                queue.append(nxt)
+
+    return False
 
 
 if __name__ == "__main__":
