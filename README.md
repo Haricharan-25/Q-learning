@@ -1,15 +1,18 @@
 # Q-Learning Pathfinding Agent
 
-A reinforcement-learning project where an agent learns to navigate a grid from Start to Goal while avoiding obstacles.
+A reinforcement-learning project where an agent learns to navigate grid environments while avoiding obstacles.
 
-## Stage 1
-- Dynamic grid environment
-- Random obstacles
-- Up, Down, Left, Right actions
-- Rewards and penalties
-- Q-table with epsilon-greedy exploration
-- Training on randomly generated grids
-- Testing on a new grid
+## Stage 2: Dynamic Grid Training
+
+The agent now receives:
+
+- Current position
+- Goal position
+- Complete obstacle layout
+
+as its state.
+
+Training uses many randomly generated, solvable grids. The final evaluation uses a separate unseen grid.
 
 ## Run
 
@@ -17,4 +20,6 @@ A reinforcement-learning project where an agent learns to navigate a grid from S
 python main.py
 ```
 
-Later stages will add NumPy, Flask, and a browser visualization.
+## Important
+
+Stage 2 uses a tabular Q-learning approach. Because the full grid is part of the state, the number of possible states grows rapidly with grid size and obstacle combinations. This is useful for demonstrating the concept, but Stage 3 will investigate a more scalable representation for generalization.
